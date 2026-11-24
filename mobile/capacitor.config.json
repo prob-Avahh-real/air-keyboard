@@ -1,0 +1,12 @@
+{
+  "appId": "com.airkeyboard.app",
+  "appName": "空气键盘",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "ios": {
+    "contentInset": "automatic"
+  }
+}

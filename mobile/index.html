@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#1a2228">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>空气键盘</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    :root {
+      --ink: #1a2228;
+      --deep: #0f1418;
+      --ivory: #f3efe6;
+      --muted: #9aa7b0;
+      --brass: #c9a86a;
+      --brass-deep: #8f7340;
+      --teal: #3d9b8f;
+      --key-w: #f7f3ea;
+      --key-w-edge: #d8d0c2;
+      --key-b: #1e262c;
+      --safe-b: env(safe-area-inset-bottom, 0px);
+      --safe-t: env(safe-area-inset-top, 0px);
+    }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: "Outfit", "Noto Sans SC", sans-serif;
+      color: var(--ivory);
+      background:
+        radial-gradient(ellipse 80% 50% at 20% -5%, rgba(61, 155, 143, 0.22), transparent 55%),
+        radial-gradient(ellipse 70% 45% at 90% 90%, rgba(201, 168, 106, 0.16), transparent 50%),
+        linear-gradient(168deg, #243038 0%, var(--ink) 42%, var(--deep) 100%);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding: calc(12px + var(--safe-t)) 16px calc(16px + var(--safe-b));
+      user-select: none;
+    }
+
+    .top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+    .brand {
+      font-family: "Fraunces", "Outfit", serif;
+      font-weight: 800;
+      font-size: clamp(1.4rem, 5.2vw, 1.85rem);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      animation: brandIn 0.7s ease-out both;
+    }
+    .brand span {
+      display: block;
+      font-family: "Outfit", sans-serif;
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+    .badges { display: flex; flex-direction: column; gap: 6px; }
+    .badge {
+      font-size: 0.68rem;
+      padding: 6px 10px;
+      border: 1px solid rgba(154, 167, 176, 0.35);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(15, 20, 24, 0.5);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .badge.active {
+      color: var(--brass);
+      border-color: rgba(201, 168, 106, 0.55);
+      background: rgba(201, 168, 106, 0.14);
+    }
+
+    .scale-tabs {
+      display: flex;
+      gap: 6px;
+      margin: 8px 0 12px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .scale-tabs::-webkit-scrollbar { display: none; }
+    .scale-tab {
+      flex: 0 0 auto;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: color 0.2s, background 0.2s;
+    }
+    .scale-tab.active {
+      color: var(--deep);
+      background: var(--brass);
+    }
+
+    #stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+      gap: 10px;
+    }
+
+    .note-display {
+      text-align: center;
+      animation: rise 0.55s ease-out both;
+    }
+    .note-display .scale {
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .note-display .name {
+      font-family: "Fraunces", serif;
+      font-weight: 800;
+      font-size: clamp(3.6rem, 20vw, 5.8rem);
+      line-height: 0.95;
+      letter-spacing: -0.03em;
+      color: var(--ivory);
+      text-shadow: 0 10px 36px rgba(61, 155, 143, 0.28);
+    }
+    .note-display .meta {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    #piano {
+      width: 100%;
+      max-width: 440px;
+      position: relative;
+      padding: 18px 14px 14px;
+      border-radius: 18px;
+      background:
+        linear-gradient(180deg, rgba(36, 48, 56, 0.9), rgba(15, 20, 24, 0.95));
+      border: 1px solid rgba(154, 167, 176, 0.18);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+      transition: transform 0.18s ease;
+    }
+    #piano.struck {
+      animation: strikeKick 0.28s ease-out;
+    }
+
+    #keyboard {
+      display: flex;
+      gap: 4px;
+      height: 132px;
+      align-items: stretch;
+    }
+    .key {
+      flex: 1;
+      border: none;
+      cursor: pointer;
+      font: inherit;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 10px;
+      font-weight: 700;
+      transition: transform 0.12s, background 0.15s, box-shadow 0.15s;
+      min-width: 0;
+    }
+    .key.white {
+      background: linear-gradient(180deg, #fffdf8, var(--key-w) 70%, var(--key-w-edge));
+      color: #2a3238;
+      border-radius: 0 0 10px 10px;
+      box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.18);
+      font-size: 0.78rem;
+    }
+    .key.black {
+      background: linear-gradient(180deg, #3a4650, var(--key-b));
+      color: var(--ivory);
+      border-radius: 0 0 10px 10px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.35);
+      font-size: 0.62rem;
+      flex: 0.85;
+    }
+    .key.selected {
+      outline: 2px solid var(--teal);
+      outline-offset: -2px;
+      box-shadow: 0 0 0 3px rgba(61, 155, 143, 0.25), 0 6px 14px rgba(0, 0, 0, 0.2);
+    }
+    .key.white.selected {
+      background: linear-gradient(180deg, #e8f7f4, #d4ebe6);
+    }
+    .key.black.selected {
+      background: linear-gradient(180deg, #2f6f68, #1e4a46);
+    }
+    .key.lit {
+      outline: 2px solid color-mix(in srgb, var(--kit, #7ec8c8) 70%, transparent);
+      background: color-mix(in srgb, var(--kit, #7ec8c8) 22%, transparent);
+    }
+    .key.flash {
+      animation: keyFlash 0.35s ease-out;
+    }
+    .key:active { transform: translateY(2px); }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.5fr 1fr 1fr;
+      gap: 8px;
+      margin-top: 14px;
+      width: 100%;
+      max-width: 440px;
+      align-self: center;
+    }
+    .controls button {
+      border: 1px solid rgba(154, 167, 176, 0.28);
+      font: inherit;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 14px 8px;
+      border-radius: 14px;
+      cursor: pointer;
+      color: var(--ivory);
+      background: rgba(15, 20, 24, 0.55);
+    }
+    #play-btn {
+      background: linear-gradient(160deg, var(--brass), var(--brass-deep));
+      color: #1a1408;
+      border: none;
+      font-size: 1rem;
+      letter-spacing: 0.03em;
+    }
+    #mute-btn.on {
+      color: #ffb4a8;
+      border-color: rgba(255, 180, 168, 0.45);
+    }
+
+    .help {
+      text-align: center;
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+
+    #toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(24px + var(--safe-b));
+      transform: translateX(-50%) translateY(12px);
+      background: rgba(15, 20, 24, 0.92);
+      border: 1px solid rgba(201, 168, 106, 0.35);
+      color: var(--brass);
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 40;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @keyframes brandIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes strikeKick {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.015) translateY(1px); }
+      100% { transform: scale(1); }
+    }
+    @keyframes keyFlash {
+      0% { filter: brightness(1.35); }
+      100% { filter: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* Watch / tiny screens */
+    @media (max-width: 280px), (max-height: 300px) {
+      body { padding: 6px; }
+      .brand { font-size: 0.95rem; }
+      .brand span, .help, .badges, #oct-down-btn, #mute-btn, #release-btn { display: none; }
+      .scale-tabs { margin: 4px 0 6px; }
+      .scale-tab { font-size: 0.65rem; padding: 4px 8px; }
+      .note-display .name { font-size: 2.1rem; }
+      .note-display .scale, .note-display .meta { font-size: 0.55rem; }
+      #piano { padding: 8px; border-radius: 10px; }
+      #keyboard { height: 72px; }
+      .key { padding-bottom: 4px; border-radius: 0 0 6px 6px; }
+      .key.white { font-size: 0.55rem; }
+      .key.black { font-size: 0.45rem; }
+      .controls { grid-template-columns: 1fr 1.4fr 1fr; margin-top: 6px; }
+      #play-btn, #oct-up-btn { padding: 10px; font-size: 0.8rem; }
+    }
+
+    /* Glasses / narrow FOV */
+    @media (max-width: 420px) and (max-height: 340px), (max-width: 340px) and (max-height: 420px) {
+      body { padding: 8px; }
+      .brand { font-size: 1.05rem; }
+      .note-display .name { font-size: 2.4rem; }
+      #keyboard { height: 90px; }
+      .controls { gap: 6px; }
+      .controls button { padding: 10px 6px; font-size: 0.75rem; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <h1 class="brand">空气键盘<span>Air Keyboard</span></h1>
+    <div class="badges">
+      <div class="badge" id="ring-badge">戒指 · 点击启用</div>
+      <div class="badge" id="cane-badge">手杖 · 点击启用</div>
+    </div>
+  </header>
+
+  <div class="scale-tabs" id="scale-tabs" aria-label="音阶"></div>
+
+  <main id="stage">
+    <div class="note-display">
+      <div class="scale" id="scale-name">大调</div>
+      <div class="name" id="note-name">C</div>
+      <div class="meta" id="note-meta">八度 4 · 1 / 7</div>
+    </div>
+
+    <div id="piano" aria-label="钢琴键盘">
+      <div id="keyboard"></div>
+    </div>
+  </main>
+
+  <div class="controls">
+    <button type="button" id="oct-down-btn">八度−</button>
+    <button type="button" id="release-btn">止音</button>
+    <button type="button" id="play-btn">弹奏</button>
+    <button type="button" id="oct-up-btn">八度+</button>
+    <button type="button" id="mute-btn">静音</button>
+  </div>
+  <p class="help">戒指左右选键 · 上下换八度 · 甩动弹奏 · 手杖挥动弹奏 · 敲击止音<br>也可点按琴键；桌面调试：←→ 选键，↑↓ 八度，空格弹奏</p>
+
+  <div id="toast" role="status"></div>
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

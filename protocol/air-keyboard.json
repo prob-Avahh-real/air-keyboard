@@ -1,0 +1,27 @@
+{
+  "name": "air-keyboard",
+  "version": "1.0.0",
+  "description": "空气键盘手势与音阶协议",
+  "instrument": "piano",
+  "gestures": {
+    "ring": {
+      "tilt_left": { "action": "prev_key", "threshold_deg": 5, "throttle_frames": 8 },
+      "tilt_right": { "action": "next_key", "threshold_deg": 5, "throttle_frames": 8 },
+      "tilt_up": { "action": "octave_up", "threshold_deg": 5, "throttle_frames": 8 },
+      "tilt_down": { "action": "octave_down", "threshold_deg": 5, "throttle_frames": 8 },
+      "shake": { "action": "play_note", "threshold_deg": 20, "throttle_frames": 8 }
+    },
+    "cane": {
+      "swing": { "action": "play_note", "threshold": 3, "throttle_frames": 6 },
+      "tap": { "action": "release", "accel_spike": 8, "throttle_frames": 6 }
+    }
+  },
+  "scales": [
+    { "id": "major", "label": "大调", "degrees": [0, 2, 4, 5, 7, 9, 11] },
+    { "id": "pentatonic", "label": "五声", "degrees": [0, 2, 4, 7, 9] },
+    { "id": "blues", "label": "蓝调", "degrees": [0, 3, 5, 6, 7, 10] },
+    { "id": "chromatic", "label": "半音", "degrees": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] }
+  ],
+  "root": "C",
+  "default_octave": 4
+}
